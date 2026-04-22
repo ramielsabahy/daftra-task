@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class InventoryService
 {
-    public function __construct(protected InventoryRepository $inventoryRepository) {}
+    public function __construct(protected InventoryRepository $inventoryRepository)
+    {
+    }
 
     /**
      * Return a paginated, filtered inventory list — cache-backed.
@@ -17,9 +19,9 @@ class InventoryService
     public function list(array $filters): LengthAwarePaginator
     {
         $cacheKey = 'inventory:list:' . sha1(json_encode(collect($filters)->sortKeys()->all()));
-        $perPage  = min((int) ($filters['per_page'] ?? 25), 100);
+        $perPage = min((int) ($filters['per_page'] ?? 25), 100);
 
-        return Cache::tags(['inventory'])->remember($cacheKey, 60, function () use ($filters, $perPage) {
+        return Cache::remember($cacheKey, 60, function () use ($filters, $perPage) {
             return $this->inventoryRepository->filter($filters, $perPage);
         });
     }
@@ -38,6 +40,6 @@ class InventoryService
      */
     public function flushCache(): void
     {
-        Cache::tags(['inventory'])->flush();
+        Cache::flush();
     }
 }

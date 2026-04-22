@@ -24,6 +24,6 @@ class StockTransferLog extends Model
 
     public function transfer(): BelongsTo
     {
-        return $this->belongsTo(StockTransfer::class);
+        return $this->belongsTo(StockTransfer::class, 'transfer_id');
     }
 }

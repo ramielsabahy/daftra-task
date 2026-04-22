@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 
 class StockTransferService
 {
-    public function __construct(protected InventoryService $inventoryService) {}
+    public function __construct(protected InventoryService $inventoryService)
+    {
+    }
 
     /**
      * Execute a complete stock transfer with locking, audit log, and post-commit events.
@@ -50,15 +52,15 @@ class StockTransferService
 
             if (!$dest) {
                 $dest = Inventory::create([
-                    'item_id'      => $data['item_id'],
+                    'item_id' => $data['item_id'],
                     'warehouse_id' => $data['to_warehouse_id'],
-                    'quantity'     => 0,
+                    'quantity' => 0,
                 ]);
             }
 
             // Snapshot quantities before mutation for audit log
             $oldQtyFrom = $source->quantity;
-            $oldQtyTo   = $dest->quantity;
+            $oldQtyTo = $dest->quantity;
 
             // ── 4. Debit source / Credit destination ──────────────────────
             $source->decrement('quantity', $data['quantity']);
@@ -67,20 +69,20 @@ class StockTransferService
             // ── 5. Persist transfer record ────────────────────────────────
             $transfer = StockTransfer::create([
                 'from_warehouse_id' => $data['from_warehouse_id'],
-                'to_warehouse_id'   => $data['to_warehouse_id'],
-                'item_id'           => $data['item_id'],
-                'transferred_by'    => $actor->id,
-                'quantity'          => $data['quantity'],
-                'status'            => StockTransfer::STATUS_COMPLETED,
-                'notes'             => $data['notes'] ?? null,
+                'to_warehouse_id' => $data['to_warehouse_id'],
+                'item_id' => $data['item_id'],
+                'transferred_by' => $actor->id,
+                'quantity' => $data['quantity'],
+                'status' => StockTransfer::STATUS_COMPLETED,
+                'notes' => $data['notes'] ?? null,
             ]);
 
             // ── 6. Immutable audit snapshot ───────────────────────────────
             StockTransferLog::create([
-                'transfer_id'  => $transfer->id,
+                'transfer_id' => $transfer->id,
                 'old_qty_from' => $oldQtyFrom,
-                'old_qty_to'   => $oldQtyTo,
-                'created_at'   => now(),
+                'old_qty_to' => $oldQtyTo,
+                'created_at' => now(),
             ]);
 
             return $transfer;
@@ -118,10 +120,20 @@ class StockTransferService
             $data['to_warehouse_id'],
         ])->get()->keyBy('id');
 
-        /** @var Warehouse $from */
+        /** @var Warehouse|null $from */
         $from = $warehouses->get($data['from_warehouse_id']);
-        /** @var Warehouse $to */
+        /** @var Warehouse|null $to */
         $to = $warehouses->get($data['to_warehouse_id']);
+
+        if (!$from) {
+            throw (new \Illuminate\Database\Eloquent\ModelNotFoundException())
+                ->setModel(Warehouse::class, [$data['from_warehouse_id']]);
+        }
+
+        if (!$to) {
+            throw (new \Illuminate\Database\Eloquent\ModelNotFoundException())
+                ->setModel(Warehouse::class, [$data['to_warehouse_id']]);
+        }
 
         if (!$from->is_active) {
             throw new InactiveWarehouseException($from->name);

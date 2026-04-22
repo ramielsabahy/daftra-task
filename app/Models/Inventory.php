@@ -25,7 +25,7 @@ class Inventory extends Model
 
     public function item(): BelongsTo
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Item::class)->withTrashed();
     }
 
     public function warehouse(): BelongsTo
@@ -45,7 +45,7 @@ class Inventory extends Model
      */
     public function isLowStock(): bool
     {
-        if ($this->item->low_stock_threshold <= 0) {
+        if (!$this->item || $this->item->low_stock_threshold <= 0) {
             return false;
         }
 

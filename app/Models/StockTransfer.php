@@ -53,7 +53,7 @@ class StockTransfer extends Model
 
     public function log(): HasOne
     {
-        return $this->hasOne(StockTransferLog::class);
+        return $this->hasOne(StockTransferLog::class, 'transfer_id');
     }
 
     // ─── Scopes ──────────────────────────────────────────────────────────────

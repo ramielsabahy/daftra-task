@@ -1,58 +1,141 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📦 Inventory Management System API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php)](https://php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)](https://mysql.com)
+[![Sanctum](https://img.shields.io/badge/Auth-Sanctum-6875F5?style=for-the-badge)](https://laravel.com/docs/sanctum)
 
-## About Laravel
+A robust, enterprise-grade multi-warehouse inventory management API built with Laravel. This system handles complex inventory logic, multi-warehouse stock transfers with race condition protection, and automated low-stock monitoring.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Key Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   **🏢 Multi-Warehouse Management**: Create, update, and manage multiple warehouse locations.
+-   **📦 Item Catalog**: Manage product details, units, and SKU tracking.
+-   **📊 Real-time Inventory**: Track stock levels across all warehouses with unified views.
+-   **🔄 Atomic Stock Transfers**: Transfer stock between warehouses safely using **Pessimistic Locking** (`SELECT FOR UPDATE`) to prevent double-spending or race conditions.
+-   **⚠️ Low Stock Alerts**: Asynchronous monitoring system that triggers events when inventory falls below thresholds.
+-   **🛡️ Secure API**: Fully protected by Laravel Sanctum with mobile-ready token-based authentication.
+-   **📝 Audit Logging**: Immutable logs for every stock transfer, capturing "before" and "after" snapshots.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🏗️ Architectural Overview
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+This project follows a **Service-Repository Pattern** to ensure clean separation of concerns:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+-   **Controllers**: Handle HTTP input and output using standard JSON responses.
+-   **Services**: House the core business logic (e.g., `StockTransferService`).
+-   **Repositories**: Abstract database queries for cleaner, more testable code.
+-   **Resources**: Standardize API output format using Laravel Eloquent Resources.
+-   **Exceptions**: Custom domain-specific exceptions (e.g., `InsufficientStockException`, `InactiveWarehouseException`).
 
-## Agentic Development
+### Race Condition Protection
+The stock transfer logic uses database-level pessimistic locking:
+1.  Begin Transaction.
+2.  Lock the source inventory row.
+3.  Check quantity.
+4.  Lock (or create) the destination inventory row.
+5.  Perform debit/credit.
+6.  Log the transfer.
+7.  Commit Transaction.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
+
+## 🛠️ Tech Stack
+
+-   **Framework**: Laravel 11+
+-   **Authentication**: Laravel Sanctum
+-   **Database**: MySQL / MariaDB (Supports `CHECK` constraints for non-negative quantities)
+-   **Pattern**: Service Layer Architecture
+-   **API Standard**: RESTful with JSON:API inspired responses
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+-   PHP 8.2 or higher
+-   Composer
+-   MySQL 8.0+
+
+### Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/daftara-task.git
+    cd daftara-task
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    composer install
+    ```
+
+3.  **Environment Setup**:
+    ```bash
+    cp .env.example .env
+    ```
+    *Update your database credentials in `.env`.*
+
+4.  **Generate Application Key**:
+    ```bash
+    php artisan key:generate
+    ```
+
+5.  **Run Migrations & Seeders**:
+    ```bash
+    php artisan migrate --seed
+    ```
+
+6.  **Start the Server**:
+    ```bash
+    php artisan serve
+    ```
+
+---
+
+## 📖 API Documentation
+
+The API is prefixed with `/api/v1`. All protected routes require a Bearer Token.
+
+### Authentication
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/auth/login` | Returns a Sanctum token |
+| `POST` | `/auth/logout` | Revokes the current token |
+| `GET` | `/auth/me` | Returns current user details |
+
+### Inventory & Warehouses
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/warehouses` | List all warehouses |
+| `GET` | `/items` | List all items |
+| `GET` | `/inventory` | View global stock levels |
+| `POST` | `/transfers` | Execute a stock transfer |
+| `GET` | `/alerts/low-stock` | List triggered low stock events |
+
+*For a full list of parameters and example payloads, please refer to the [Postman Collection](Inventory_Management_API.postman_collection.json).*
+
+---
+
+## 🧪 Testing
+
+The project includes feature tests for the core logic:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Key test areas:
+-   Authentication flows.
+-   Transfer validation (different warehouses, sufficient stock).
+-   Concurrent transfer simulation (mocked locking).
+-   Low stock event triggering.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📄 License
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](LICENSE).

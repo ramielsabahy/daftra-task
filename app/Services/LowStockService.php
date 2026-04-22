@@ -15,9 +15,14 @@ class LowStockService
     public function evaluate(Inventory $inventory): void
     {
         // Reload fresh data after transfer
-        $inventory->refresh()->load('item');
+        try {
+            $inventory->refresh()->load('item');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Inventory record was deleted in the meantime
+            return;
+        }
 
-        if (!$this->isThresholdEnabled($inventory)) {
+        if (!$inventory->item || !$this->isThresholdEnabled($inventory)) {
             return;
         }
 
@@ -72,6 +77,6 @@ class LowStockService
      */
     private function isThresholdEnabled(Inventory $inventory): bool
     {
-        return $inventory->item->low_stock_threshold > 0;
+        return $inventory->item?->low_stock_threshold > 0;
     }
 }
