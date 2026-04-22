@@ -64,7 +64,7 @@ The stock transfer logic uses database-level pessimistic locking:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/daftara-task.git
+    git clone https://github.com/ramielsabahy/daftara-task.git
     cd daftara-task
     ```
 
