@@ -116,7 +116,7 @@ The API is prefixed with `/api/v1`. All protected routes require a Bearer Token.
 | `POST` | `/transfers` | Execute a stock transfer |
 | `GET` | `/alerts/low-stock` | List triggered low stock events |
 
-*For a full list of parameters and example payloads, please refer to the [Postman Collection](Inventory_Management_API.postman_collection.json).*
+*For a full list of parameters and example payloads, please refer to the [Postman Collection](https://documenter.getpostman.com/view/3208343/2sBXqFN2nz).*
 
 ---
 

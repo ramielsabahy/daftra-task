@@ -20,7 +20,9 @@ return new class extends Migration
         });
 
         // DB-level guard against negative quantity (MySQL 8+ / MariaDB support)
-        DB::statement('ALTER TABLE inventories ADD CONSTRAINT chk_quantity_non_negative CHECK (quantity >= 0)');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE inventories ADD CONSTRAINT chk_quantity_non_negative CHECK (quantity >= 0)');
+        }
     }
 
     public function down(): void
